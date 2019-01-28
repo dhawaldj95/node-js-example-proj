@@ -1,9 +1,11 @@
 var express = require('express');
 var router = express.Router();
-var mongodb = require('mongodb');
 var assert = require('assert');
 
-var url = 'mongodb://localhost:27017/test';
+var MongoClient = require('mongodb').MongoClient;
+var objectId = require('mongodb').ObjectID;
+
+var url = 'mongodb://localhost:27017';
 
 /* GET home page. */
 router.get('/', function(req, res, next) {
@@ -17,12 +19,13 @@ router.post('/insert', function(req, res, next) {
     author: req.body.author
   };
 
-  mongodb.connect(url, function(err, db) {
+  MongoClient.connect(url, { useNewUrlParser: true }, function(err, client) {
     assert.equal(null, err);
+    var db = client.db('test1');
     db.collection('user-data').insertOne(item, function(err, result) {
-      assert.equal(null, error);
+      assert.equal(null, err);
       console.log("Item Inserted");
-      db.close();
+      client.close();
       res.json({message: 'success'});
     });
   })
@@ -31,24 +34,57 @@ router.post('/insert', function(req, res, next) {
 router.post('/retrieve', function (req, res, next) {
 
   var resultArray = [];
-  mongodb.connect(url, function (err, db)  {
+  MongoClient.connect(url, { useNewUrlParser: true }, function (err, client)  {
     assert.equal(null, err);
+    var db = client.db('test1');
     var cursor = db.collection('user-data').find();
     cursor.forEach(function(doc, err) {
       assert.equal(null, err);
       resultArray.push(doc);
     }, function() {
-      db.close();
+      client.close();
       res.json({output: resultArray});
     });
   });
 
-})
+});
+
+router.post('/update', function (req, res, next) {
+  var item = {
+    title: req.body.title,
+    content: req.body.content,
+    author: req.body.author
+  };
+
+  var id = req.body.id;
+
+  MongoClient.connect(url, { useNewUrlParser: true }, function(err, client) {
+    assert.equal(null, err);
+    var db = client.db('test1');
+    db.collection('user-data').updateOne({"_id": objectId(id)}, {$set: item}, function(err, result) {
+      assert.equal(null, err);
+      console.log("Item Updated");
+      client.close();
+      res.json({message: 'success'});
+    });
+  })
+});
 
 
+router.post('/delete', function (req, res, next) {
+  var id = req.body.id;
 
-
-
+  MongoClient.connect(url, { useNewUrlParser: true }, function(err, client) {
+    assert.equal(null, err);
+    var db = client.db('test1');
+    db.collection('user-data').deleteOne({"_id": objectId(id)}, function(err, result) {
+      assert.equal(null, err);
+      console.log("Item Deleted");
+      client.close();
+      res.json({message: 'success'});
+    });
+  })
+});
 
 // router.post('/submit', function(req, res, next) {
 //   req.check('email', 'Invalid Email Address').isEmail();
