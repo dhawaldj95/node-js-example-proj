@@ -22,7 +22,7 @@ app.use(express.urlencoded({ extended: false }));
 app.use(expressValidator());
 app.use(cookieParser());
 app.use(express.static(path.join(__dirname, 'public')));
-app.use(expressSession({ secret: 'max', saveUninitialized: false, resave: false}));
+app.use(expressSession({ secret: 'max', saveUninitialized: true, resave: false}));
 
 app.use('/', indexRouter);
 app.use('/users', usersRouter);
